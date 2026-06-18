@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dark Mode</title>
+    <style>
+        :root {
+            --color-primary: #667eea;
+            --color-secondary: #764ba2;
+            --color-background: #ffffff;
+            --color-surface: #f8f9fa;
+            --color-text: #333333;
+            --color-text-secondary: #666666;
+            --color-border: #dee2e6;
+            --color-success: #28a745;
+            --color-error: #dc3545;
+            --color-info: #17a2b8;
+            
+            --color-header-bg: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            --color-card-bg: var(--color-background);
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-primary: #7c93e8;
+                --color-secondary: #8a5fc4;
+                --color-background: #121212;
+                --color-surface: #1e1e1e;
+                --color-text: #f8f9fa;
+                --color-text-secondary: #adb5bd;
+                --color-border: #495057;
+                --color-success: #34ce57;
+                --color-error: #e74c3c;
+                --color-info: #39c0ed;
+            }
+        }
+        
+        body {
+            font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: var(--color-header-bg);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: var(--color-card-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status {
+            display: flex;
+            gap: 20px;
