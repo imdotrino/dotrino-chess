@@ -393,7 +393,7 @@ onMounted(async () => {
           </svg>
         </button>
 
-        <dotrino-support class="hdr-coin" :lang="lang" href="https://ko-fi.com/dotrino" repo="dotrino/simple-websocket-chess" discord="https://discord.gg/D648uq7cth"></dotrino-support>
+        <dotrino-support class="hdr-coin" :lang="lang" href="https://ko-fi.com/dotrino" repo="imdotrino/dotrino-chess" discord="https://discord.gg/D648uq7cth"></dotrino-support>
       </div>
     </header>
 
