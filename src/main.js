@@ -3,7 +3,9 @@ import { createPinia } from 'pinia'
 import './styles/theme.css'
 import './style.css'
 import App from './App.vue'
-import '@dotrino/support'
+// <dotrino-support> y <dotrino-back> los trae <dotrino-topbar> (§5): no se
+// importan ni se montan aparte. Aquí solo queda <dotrino-profile>, que la app
+// usa por su cuenta (perfil propio con ELO + tarjeta del rival).
 import '@dotrino/profile'
 import '@dotrino/share'
 import { createBackNav } from '@dotrino/nav'

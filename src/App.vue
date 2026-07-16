@@ -1,12 +1,13 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, watchEffect, onMounted } from 'vue'
 import LobbyView from './components/lobby/LobbyView.vue'
 import PhaserChessGame from './components/chess/PhaserChessGame.vue'
 import UserSettingsModal from './components/identity/UserSettingsModal.vue'
 import PeerRatingModal from './components/identity/PeerRatingModal.vue'
 import { computeDerivedRating } from './utils/rating'
-import { t, lang, toggleLang } from './i18n'
+import { t, lang, setLang } from './i18n'
 import { useBackLayer } from '@dotrino/nav/vue'
+import '@dotrino/topbar'
 import '@dotrino/share'
 import { startAppTutorial } from './lib/tutorial'
 import { useGameStore } from './stores/gameStore'
@@ -85,8 +86,21 @@ const openOpponentRating = () => {
   ratingTarget.value = opponentInfo.value
 }
 
-// "Mi perfil": botón del header (a la izquierda de la moneda de soporte) que abre
-// el MISMO Web Component compartido en modo self con mi identidad del vault.
+// ── Topbar estándar del ecosistema (<dotrino-topbar>, §5) ──────────
+// La barra (marca + volver + acciones + idioma + perfil + moneda) es del
+// componente compartido; la app solo le pasa los pilares que ya maneja.
+const topbarRef = ref(null)
+const identityInst = ref(null)
+const reputationInst = ref(null)
+
+// El idioma lo gobierna el toggle del topbar (clave 'dotrino.lang'); acá solo
+// reflejamos su evento en nuestro modelo para traducir el contenido.
+const onLang = (e) => { const l = e?.detail?.lang; if (l === 'es' || l === 'en') setLang(l) }
+
+// "Mi perfil": el botón vive en el topbar (§6.1). El ajedrez sigue abriendo su
+// propio <dotrino-profile> porque necesita `indicators="elo:chess"` (el ELO del
+// jugador), que el modal genérico del topbar no muestra: por eso cancelamos su
+// evento (`.prevent`) en vez de dejarle abrir el suyo.
 const myProfilePk = ref(null)
 async function openMyProfile () {
   await connectionStore.refreshIdentity?.()
@@ -107,6 +121,17 @@ const profileTheme = {
   '--ccp-online': 'var(--color-success)', '--ccp-affinity': 'var(--color-secondary)',
   '--ccp-input-bg': 'var(--color-background)', '--ccp-radius': '10px',
 }
+
+// Pilares al topbar (propiedades JS del Web Component): con `identity` el botón
+// de perfil muestra el avatar del perfil ACTIVO (identicon del vault, §6.1) en
+// vez de la silueta genérica.
+watchEffect(() => {
+  const tb = topbarRef.value
+  if (!tb) return
+  tb.identity = identityInst.value ?? null
+  tb.reputation = reputationInst.value ?? null
+  tb.profileTheme = profileTheme
+})
 
 onMounted(() => {
   connectionStore.refreshIdentity?.()
@@ -336,6 +361,11 @@ onMounted(async () => {
   const frag = (location.hash || '').replace(/^#/, '')
   await autoConnect()
   try { await connectionStore.refreshIdentity?.() } catch (_) {}
+  // Identidad/reputación ya conectadas por el lobby → al topbar (avatar + perfil).
+  try {
+    identityInst.value = await connectionStore.getIdentity()
+    if (identityInst.value) reputationInst.value = connectionStore.getReputation()
+  } catch (_) {}
   if (!connectionStore.hasNick) connectionStore.requireNick(null)
   // Tutorial guiado (una sola vez por dispositivo). Solo en visita "limpia" (sin
   // enlace #table entrante), para no interrumpir a quien llega por un enlace.
@@ -358,9 +388,21 @@ onMounted(async () => {
 
 <template>
   <div class="app">
-    <header class="topbar">
-      <dotrino-back class="cc-back"></dotrino-back>
-      <div class="brand">
+    <!-- Barra superior estándar del ecosistema (§5): marca + volver + idioma +
+         perfil + moneda de support los trae el componente compartido. La app
+         solo aporta su marca (slot "brand") y sus acciones (slot "end"). -->
+    <dotrino-topbar
+      ref="topbarRef"
+      brand-href="./"
+      :lang="lang"
+      profile
+      support-href="https://ko-fi.com/dotrino"
+      support-repo="imdotrino/dotrino-chess"
+      support-discord="https://discord.gg/D648uq7cth"
+      @dotrino-lang="onLang"
+      @dotrino-profile.prevent="openMyProfile"
+    >
+      <div slot="brand" class="brand">
         <span class="brand-mark">♞</span>
         <div class="brand-text">
           <span class="brand-name">{{ t.brand }}</span>
@@ -368,7 +410,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div class="hdr-actions">
+      <div slot="end" class="hdr-actions">
         <button v-if="currentView !== 'lobby'" class="ghost-btn" @click="returnToLobby">← {{ t.lobby }}</button>
 
         <button v-if="opponentInfo" class="opp-chip" @click="openOpponentRating" :title="t.rateOpponent">
@@ -384,18 +426,8 @@ onMounted(async () => {
           <span class="me-name">@{{ connectionStore.myNickname || t.noName }}</span>
           <span v-if="connectionStore.myElo" class="elo-badge" title="ELO">{{ connectionStore.myElo.elo }}</span>
         </button>
-
-        <button class="lang-btn" @click="toggleLang" :title="lang === 'es' ? 'English' : 'Español'">{{ lang === 'es' ? 'EN' : 'ES' }}</button>
-
-        <button class="profile-btn" data-testid="my-profile" @click="openMyProfile" :title="t.identity" aria-label="Mi perfil">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" />
-          </svg>
-        </button>
-
-        <dotrino-support class="hdr-coin" :lang="lang" href="https://ko-fi.com/dotrino" repo="imdotrino/dotrino-chess" discord="https://discord.gg/D648uq7cth"></dotrino-support>
       </div>
-    </header>
+    </dotrino-topbar>
 
     <div v-if="connectionStore.nickModalOpen" class="nick-overlay">
       <div class="nick-card">
@@ -484,16 +516,19 @@ onMounted(async () => {
 <style scoped>
 .app { min-height: 100vh; display: flex; flex-direction: column; }
 
-/* ── Topbar ── */
-.topbar {
+/* ── Topbar (§5: componente compartido, tematizado con la paleta del ajedrez) ──
+   El .bar del componente no es sticky: lo fija el host desde acá. */
+dotrino-topbar {
   position: sticky; top: 0; z-index: 20;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; padding: 10px 18px; flex-wrap: wrap; row-gap: 8px;
-  background: rgba(28, 23, 16, .82); backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--color-border);
+  --dotrino-topbar-bg: rgba(28, 23, 16, .82);
+  --dotrino-topbar-border: var(--color-border);
+  --dotrino-topbar-text: var(--color-text);
+  --dotrino-topbar-muted: var(--color-text-secondary);
+  --dotrino-topbar-accent: var(--color-primary);
+  --dotrino-topbar-accent-text: #1a1408;
+  --dotrino-topbar-font: var(--font-body, system-ui, sans-serif);
 }
-.cc-back { color: var(--color-text-on-dark, #f8f9fa); --cc-back-size: 36px; margin-left: -2px; }
-.brand { display: flex; align-items: center; gap: 11px; margin-right: auto; }
+.brand { display: flex; align-items: center; gap: 11px; }
 .brand-mark {
   width: 40px; height: 40px; display: grid; place-items: center;
   font-size: 24px; line-height: 1; color: #1a1408;
@@ -504,25 +539,12 @@ onMounted(async () => {
 .brand-name { font-family: var(--font-headline); font-weight: 700; font-size: 18px; color: var(--color-text); }
 .brand-sub { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--color-text-tertiary); }
 
+/* Acciones propias del ajedrez: viajan por el slot "end" del topbar (cluster
+   derecho, antes del idioma). Van en UN contenedor para conservar su orden:
+   el componente coloca sus items en row-reverse. */
 .hdr-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-/* Móvil: la marca se queda en su fila; las acciones bajan a una 2ª fila a la
-   derecha (convención §5 de CONVENCIONES-APPS.md). */
-@media (max-width: 560px) {
-  .hdr-actions { flex-basis: 100%; }
-}
 .ghost-btn { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-secondary); padding: 7px 12px; border-radius: 999px; font-size: 13px; }
 .ghost-btn:hover { color: var(--color-text); border-color: var(--color-border-dark); }
-.lang-btn { background: var(--color-surface-variant); border: 1px solid var(--color-border); color: var(--color-text-secondary); padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .03em; }
-.lang-btn:hover { color: var(--color-text); border-color: var(--color-primary); }
-/* "Mi perfil": botón circular ghost a la izquierda de la moneda de soporte. */
-.profile-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; padding: 0; flex-shrink: 0;
-  background: var(--color-surface-variant); border: 1px solid var(--color-border);
-  color: var(--color-text-secondary); border-radius: 50%; cursor: pointer;
-}
-.profile-btn svg { width: 18px; height: 18px; display: block; }
-.profile-btn:hover { color: var(--color-text); border-color: var(--color-primary); }
 .elo-badge { background: var(--color-primary); color: #1a1408; border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 700; font-family: var(--font-mono); }
 
 .me-chip, .opp-chip {
@@ -538,7 +560,6 @@ onMounted(async () => {
 .opp-vs { color: var(--color-text-tertiary); font-weight: 700; font-size: 11px; }
 .rating-badge { background: var(--color-primary); color: #1a1408; border-radius: 999px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
 .rating-badge.derived { background: transparent; color: var(--color-primary-light); border: 1px solid var(--color-primary); }
-.hdr-coin { display: inline-flex; align-items: center; }
 
 /* ── Nickname gate ── */
 .nick-overlay {

@@ -59,7 +59,10 @@ export function startAppTutorial (ctx) {
       },
       {
         id: 'profile', order: 5, placement: 'bottom',
-        target: '[data-testid="my-profile"]',
+        // El botón de perfil vive en el Shadow DOM de <dotrino-topbar>, así que
+        // un selector plano (document.querySelector) no lo encuentra: lo
+        // resolvemos entrando al shadowRoot.
+        target: () => document.querySelector('dotrino-topbar')?.shadowRoot?.querySelector('[data-testid="my-profile"]') || null,
         before: goLobby,
         title: { es: 'Tu identidad', en: 'Your identity' },
         text: {

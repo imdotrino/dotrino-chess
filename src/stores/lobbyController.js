@@ -326,6 +326,10 @@ async function setPeerNickname (pubkey, nick) {
   return updated
 }
 function getReputation () { return reputation }
+// Instancia de identidad YA conectada (la del lobby). La consume el
+// <dotrino-topbar> para el avatar del perfil activo y el modal de perfil. No
+// abrimos un segundo Identity.connect(): sería otro iframe del mismo vault.
+async function getIdentity () { return await ensureIdentity() }
 // Provider para el Web Component compartido <dotrino-profile> (mismo del
 // ecosistema): datos del vault + reputación de la nube. Para "mi perfil" propio.
 async function getProfileProvider () {
@@ -449,7 +453,7 @@ export const lobbyController = {
   lastPublicHostsUpdate, connectionError, connectionStatus, canPlay,
   // identidad / reputación
   myPubkey, myNickname, peerIdentities, trustMap, setMyNickname, ratePeer,
-  setPeerNickname, getReputation, getProfileProvider,
+  setPeerNickname, getIdentity, getReputation, getProfileProvider,
   // nickname requerido
   hasNick, nickModalOpen, requireNick, submitNick, cancelNick,
   // ELO

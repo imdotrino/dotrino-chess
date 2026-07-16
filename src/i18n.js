@@ -193,8 +193,23 @@ const messages = {
   }
 }
 
+// Clave compartida del ecosistema: la gobierna el toggle de <dotrino-topbar>
+// (§5/§9). Aquí solo reflejamos su valor para traducir el contenido de la app.
+const LANG_KEY = 'dotrino.lang'
+
 function detect () {
-  const saved = (typeof localStorage !== 'undefined' && localStorage.getItem('chess_lang')) || ''
+  if (typeof localStorage === 'undefined') return 'es'
+  // Migración única: el ajedrez guardaba su idioma en 'chess_lang'. Pasamos el
+  // valor a la clave del ecosistema para no resetear a quien ya eligió idioma.
+  try {
+    const legacy = localStorage.getItem('chess_lang')
+    if (legacy === 'es' || legacy === 'en') {
+      if (!localStorage.getItem(LANG_KEY)) localStorage.setItem(LANG_KEY, legacy)
+      localStorage.removeItem('chess_lang')
+    }
+  } catch (_) {}
+  let saved = ''
+  try { saved = localStorage.getItem(LANG_KEY) || '' } catch (_) {}
   if (saved === 'es' || saved === 'en') return saved
   const nav = (typeof navigator !== 'undefined' && (navigator.language || '')).toLowerCase()
   return nav.startsWith('es') ? 'es' : 'en'
@@ -202,8 +217,9 @@ function detect () {
 
 export const lang = ref(detect())
 export const t = computed(() => messages[lang.value] || messages.es)
+/** Refleja el idioma que fija el topbar (él persiste en LANG_KEY). */
 export function setLang (l) {
   lang.value = (l === 'en') ? 'en' : 'es'
-  try { localStorage.setItem('chess_lang', lang.value) } catch (_) {}
+  try { localStorage.setItem(LANG_KEY, lang.value) } catch (_) {}
+  if (typeof document !== 'undefined') document.documentElement.lang = lang.value
 }
-export function toggleLang () { setLang(lang.value === 'es' ? 'en' : 'es') }
