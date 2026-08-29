@@ -11,7 +11,7 @@
     
     <div v-if="connectionStore.isConnected" class="connected-info">
       <div class="token-section">
-        <label>Tu Token:</label>
+        <label>{{ t('tokenLabel') }}</label>
         <div class="token-display">
           <code class="token-value">{{ connectionStore.shortToken }}</code>
           <button 
@@ -136,6 +136,7 @@
 </template>
 
 <script setup>
+import { t } from '@/i18n'
 import { ref, computed, onMounted } from 'vue'
 import { useConnectionStore } from '@/stores/connectionStore'
 import { useGameStore } from '@/stores/gameStore'
