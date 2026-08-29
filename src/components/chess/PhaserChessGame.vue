@@ -363,7 +363,7 @@ function handleSquareClick(row, col) {
       : playerGameStore.makeMove({ row, col })
     
     if (moveSuccess) {
-      console.log('Movimiento realizado')
+      console.log('Move played')
     }
   } else {
     // Seleccionar pieza
