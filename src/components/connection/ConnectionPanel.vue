@@ -195,7 +195,7 @@ async function connect() {
   try {
     await connectionStore.connect()
   } catch (error) {
-    console.error('Error conectando:', error)
+    console.error('Connection failed:', error)
   } finally {
     isConnecting.value = false
   }
@@ -228,7 +228,7 @@ function copyToken() {
       }, 2000)
     })
     .catch(err => {
-      console.error('Error copiando token:', err)
+      console.error('Could not copy the token:', err)
       // Fallback para navegadores antiguos
       const textArea = document.createElement('textarea')
       textArea.value = connectionStore.shortToken
@@ -259,7 +259,7 @@ function startGame() {
     gameStore.startGame(true, 'white')
   } else {
     // Como guest, esperamos que el host inicie el juego
-    console.log('Esperando que el host inicie el juego...')
+    console.log('Waiting for the host to start the game...')
   }
 }
 

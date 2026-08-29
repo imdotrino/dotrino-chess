@@ -267,7 +267,7 @@ export function parseWebSocketMessage(message) {
     const data = JSON.parse(jsonData)
     return { type, data }
   } catch (error) {
-    console.error('Error parseando mensaje WebSocket:', error, message)
+    console.error('Could not parse the WebSocket message:', error, message)
     return { type, data: {} }
   }
 }

@@ -268,11 +268,11 @@ const autoConnect = async () => {
   
   isConnecting.value = true
   try {
-    console.log('Conectando automáticamente al servidor WebSocket proxy...')
+    console.log('Connecting automatically to the WebSocket proxy server...')
     await connectionStore.connect()
-    console.log('Conexión WebSocket proxy establecida automáticamente')
+    console.log('WebSocket proxy connection established automatically')
   } catch (error) {
-    console.error('Error al conectar automáticamente:', error)
+    console.error('Automatic connection failed:', error)
     // El connectionStore manejará la reconexión automática
   } finally {
     isConnecting.value = false
@@ -315,7 +315,7 @@ const returnToLobby = async () => {
     connectionStore.setSubscribedHost(null)
     currentView.value = 'lobby'
   } catch (error) {
-    console.error('Error al volver al lobby:', error)
+    console.error('Could not return to the lobby:', error)
     playerGameStore.resetLocalGame()
     connectionStore.setMode(null)
     connectionStore.setSubscribedHost(null)
@@ -334,7 +334,7 @@ const joinPublicGame = async (hostToken) => {
       connectionStore.setMode(null)
     }
   } catch (error) {
-    console.error('Error al unirse al juego:', error)
+    console.error('Could not join the game:', error)
     connectionStore.setMode(null)
   }
 }

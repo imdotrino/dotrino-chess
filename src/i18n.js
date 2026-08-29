@@ -89,7 +89,7 @@ const messages = {
     idImported: 'Identidad importada. Recarga la página para sincronizar.',
     invalidFile: 'Archivo inválido: ',
     // modal de perfil/rating
-    tokenLabel: 'Token',
+    tokenLabel: 'Código de conexión',
     waitingVerify: 'Esperando verificación de identidad…',
     customNick: 'Nickname personalizado',
     customNickPh: 'Sobrescribe el nickname público',
@@ -181,7 +181,7 @@ const messages = {
     idImported: 'Identity imported. Reload the page to sync.',
     invalidFile: 'Invalid file: ',
     // profile/rating modal
-    tokenLabel: 'Token',
+    tokenLabel: 'Connection code',
     waitingVerify: 'Waiting for identity verification…',
     customNick: 'Custom nickname',
     customNickPh: 'Overrides the public nickname',

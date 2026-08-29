@@ -332,7 +332,7 @@ function handleSquareClick(row, col) {
     : playerGameStore.isMyTurn
   
   if (!isMyTurn) {
-    console.log('No es tu turno')
+    console.log('Not your turn')
     return
   }
   
@@ -424,7 +424,7 @@ function initializeGame() {
     game.value = new Phaser.Game(config)
     gameInitialized.value = true
   } catch (error) {
-    console.error('Error inicializando juego Phaser:', error)
+    console.error('Could not initialise the Phaser game:', error)
     gameError.value = 'Error al inicializar el juego'
   }
 }
