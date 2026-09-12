@@ -234,10 +234,14 @@ function setMode (m, vis = null) {
   }
 }
 
-async function subscribeToHost (hostToken) {
+// `hostPubkey` es la identidad del host: con ella el saludo sale SELLADO desde el primer
+// mensaje (@dotrino/lobby ≥ 0.8.0). La trae el resumen de la lista de salas; por un enlace
+// compartido no viene, y entonces la sala se presenta y la pregunta.
+async function subscribeToHost (hostToken, hostPubkey = null) {
   if (!hostToken) return false
+  const known = hostPubkey || (publicRooms.value.find(r => r.roomId === hostToken) || {}).hostPubkey || null
   try {
-    const r = await lobby.joinRoom(hostToken, { playerName: myNickname.value })
+    const r = await lobby.joinRoom(hostToken, { playerName: myNickname.value, hostPubkey: known })
     _bind(r)
     return true
   } catch (e) {

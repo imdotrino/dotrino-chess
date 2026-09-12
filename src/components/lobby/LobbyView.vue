@@ -65,7 +65,7 @@
             <span class="stat ghost" :title="t.spectators">👁 {{ r.spectators || 0 }}</span>
           </div>
 
-          <button class="join" :class="{ primary: openSeats(r) }" :disabled="!canJoin(r)" @click="joinGame(r.roomId)">
+          <button class="join" :class="{ primary: openSeats(r) }" :disabled="!canJoin(r)" @click="joinGame(r.roomId, r.hostPubkey)">
             {{ openSeats(r) ? t.join : t.watch }}
           </button>
         </li>
@@ -129,10 +129,11 @@ const createGame = () => connectionStore.requireNick(() => {
   errorMessage.value = ''
   connectionStore.setMode('host', isPrivate.value ? 'private' : 'public')
 })
-const joinGame = (roomId) => connectionStore.requireNick(async () => {
+// La pubkey del host viene en el resumen de la sala: con ella el saludo ya sale sellado.
+const joinGame = (roomId, hostPubkey = null) => connectionStore.requireNick(async () => {
   errorMessage.value = ''
   connectionStore.setMode('guest')
-  const ok = await connectionStore.subscribeToHost(roomId)
+  const ok = await connectionStore.subscribeToHost(roomId, hostPubkey)
   if (!ok) { errorMessage.value = t.value.errJoin; connectionStore.setMode(null) }
 })
 const joinManual = () => {
