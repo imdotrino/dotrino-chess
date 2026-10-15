@@ -1047,7 +1047,7 @@ defineExpose({
   color: var(--color-primary, #cda350);
   cursor: pointer;
 }
-.share-table-btn:hover { background: var(--color-primary, #cda350); color: #1c1c1e; }
+.share-table-btn:hover { background: var(--color-primary, #cda350); color: var(--dt-accent-ink); }
 
 .loading-overlay,
 .error-overlay {

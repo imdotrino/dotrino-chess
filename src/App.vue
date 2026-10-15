@@ -112,16 +112,6 @@ function bindMyProfile (el) {
   connectionStore.getProfileProvider().then((p) => { if (p) el.provider = p })
 }
 useBackLayer(myProfilePk, { onClose: () => { myProfilePk.value = null } })
-const profileTheme = {
-  '--ccp-bg': 'var(--color-card-bg)', '--ccp-bg-2': 'var(--color-surface)',
-  '--ccp-bg-3': 'var(--color-surface-variant)', '--ccp-bg-4': 'var(--color-border-light)',
-  '--ccp-border': 'var(--color-border)', '--ccp-text': 'var(--color-text)',
-  '--ccp-muted': 'var(--color-text-secondary)', '--ccp-accent': 'var(--color-primary)',
-  '--ccp-accent-2': 'var(--color-primary-dark)', '--ccp-derived': '#d49a00', '--ccp-gold': '#f5b301',
-  '--ccp-online': 'var(--color-success)', '--ccp-affinity': 'var(--color-secondary)',
-  '--ccp-input-bg': 'var(--color-background)', '--ccp-radius': '10px',
-}
-
 // Pilares al topbar (propiedades JS del Web Component): con `identity` el botón
 // de perfil muestra el avatar del perfil ACTIVO (identicon del vault, §6.1) en
 // vez de la silueta genérica.
@@ -130,7 +120,6 @@ watchEffect(() => {
   if (!tb) return
   tb.identity = identityInst.value ?? null
   tb.reputation = reputationInst.value ?? null
-  tb.profileTheme = profileTheme
 })
 
 onMounted(() => {
@@ -395,7 +384,7 @@ onMounted(async () => {
       ref="topbarRef"
       brand-href="./"
       :lang="lang"
-      profile
+      profile theme
       support-href="https://ko-fi.com/dotrino"
       support-repo="imdotrino/dotrino-chess"
       support-discord="https://discord.gg/D648uq7cth"
@@ -464,7 +453,6 @@ onMounted(async () => {
       mode="self"
       indicators="elo:chess"
       :lang="lang"
-      :style="profileTheme"
       :pubkey="myProfilePk"
       :name="connectionStore.myNickname || ''"
       @cc-profile-close="myProfilePk = null"
@@ -520,20 +508,13 @@ onMounted(async () => {
    El .bar del componente no es sticky: lo fija el host desde acá. */
 dotrino-topbar {
   position: sticky; top: 0; z-index: 20;
-  --dotrino-topbar-bg: rgba(28, 23, 16, .82);
-  --dotrino-topbar-border: var(--color-border);
-  --dotrino-topbar-text: var(--color-text);
-  --dotrino-topbar-muted: var(--color-text-secondary);
-  --dotrino-topbar-accent: var(--color-primary);
-  --dotrino-topbar-accent-text: #1a1408;
-  --dotrino-topbar-font: var(--font-body, system-ui, sans-serif);
 }
 .brand { display: flex; align-items: center; gap: 11px; }
 .brand-mark {
   width: 40px; height: 40px; display: grid; place-items: center;
-  font-size: 24px; line-height: 1; color: #1a1408;
+  font-size: 24px; line-height: 1; color: var(--dt-accent-ink);
   background: linear-gradient(145deg, var(--color-primary-light), var(--color-primary-dark));
-  border-radius: 12px; box-shadow: 0 4px 14px rgba(205,163,80,.3);
+  border-radius: 12px; box-shadow: 0 4px 14px color-mix(in srgb, var(--dt-accent) 30%, transparent);
 }
 .brand-text { display: flex; flex-direction: column; line-height: 1.05; }
 .brand-name { font-family: var(--font-headline); font-weight: 700; font-size: 18px; color: var(--color-text); }
@@ -545,7 +526,7 @@ dotrino-topbar {
 .hdr-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .ghost-btn { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-secondary); padding: 7px 12px; border-radius: 999px; font-size: 13px; }
 .ghost-btn:hover { color: var(--color-text); border-color: var(--color-border-dark); }
-.elo-badge { background: var(--color-primary); color: #1a1408; border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 700; font-family: var(--font-mono); }
+.elo-badge { background: var(--color-primary); color: var(--dt-accent-ink); border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 700; font-family: var(--font-mono); }
 
 .me-chip, .opp-chip {
   display: inline-flex; align-items: center; gap: 8px;
@@ -558,7 +539,7 @@ dotrino-topbar {
 .dot.on { background: var(--color-success); box-shadow: 0 0 0 3px rgba(122,166,79,.2); }
 .dot.off { background: var(--color-error); opacity: .7; }
 .opp-vs { color: var(--color-text-tertiary); font-weight: 700; font-size: 11px; }
-.rating-badge { background: var(--color-primary); color: #1a1408; border-radius: 999px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+.rating-badge { background: var(--color-primary); color: var(--dt-accent-ink); border-radius: 999px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
 .rating-badge.derived { background: transparent; color: var(--color-primary-light); border: 1px solid var(--color-primary); }
 
 /* ── Nickname gate ── */
@@ -576,9 +557,9 @@ dotrino-topbar {
 @keyframes pop { from { transform: translateY(10px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
 .nick-mark {
   width: 64px; height: 64px; margin: 0 auto 18px; display: grid; place-items: center;
-  font-size: 36px; color: #1a1408; border-radius: 16px;
+  font-size: 36px; color: var(--dt-accent-ink); border-radius: 16px;
   background: linear-gradient(145deg, var(--color-primary-light), var(--color-primary-dark));
-  box-shadow: 0 6px 20px rgba(205,163,80,.35);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--dt-accent) 35%, transparent);
 }
 .nick-card h2 { font-size: 24px; margin-bottom: 8px; }
 .nick-sub { color: var(--color-text-secondary); font-size: 14px; line-height: 1.55; margin: 0 0 20px; }
@@ -624,9 +605,9 @@ dotrino-topbar {
   display: inline-block; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
   background: var(--color-surface-variant); color: var(--color-text-secondary); border: 1px solid var(--color-border);
 }
-.state-pill[data-state="playing"], .state-pill[data-state="check"] { background: rgba(122,166,79,.18); color: var(--color-success-light); border-color: transparent; }
-.state-pill[data-state="check"] { background: rgba(214,162,58,.18); color: var(--color-warning-light); }
-.state-pill[data-state="checkmate"], .state-pill[data-state="finished"] { background: rgba(199,92,77,.18); color: var(--color-error-light); border-color: transparent; }
+.state-pill[data-state="playing"], .state-pill[data-state="check"] { background: color-mix(in srgb, var(--dt-ok) 18%, transparent); color: var(--color-success-light); border-color: transparent; }
+.state-pill[data-state="check"] { background: color-mix(in srgb, var(--dt-busy) 18%, transparent); color: var(--color-warning-light); }
+.state-pill[data-state="checkmate"], .state-pill[data-state="finished"] { background: color-mix(in srgb, var(--dt-error) 18%, transparent); color: var(--color-error-light); border-color: transparent; }
 .winner-line { margin-top: 12px; font-weight: 700; color: var(--color-primary-light); }
 
 .moves-card h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--color-text-tertiary); margin-bottom: 10px; }

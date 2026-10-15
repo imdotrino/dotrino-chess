@@ -162,7 +162,7 @@ export default {
 <style scoped>
 .ws-demo {
   padding: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--dt-line);
   border-radius: 8px;
   max-width: 800px;
   margin: 20px auto;
@@ -174,7 +174,7 @@ export default {
   gap: 10px;
   margin-bottom: 20px;
   padding: 10px;
-  background: #f5f5f5;
+  background: var(--dt-surface);
   border-radius: 4px;
 }
 
@@ -182,11 +182,11 @@ export default {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #ccc;
+  background: var(--dt-surface-3);
 }
 
 .status-indicator.connected {
-  background: #4caf50;
+  background: var(--dt-ok);
 }
 
 .controls {
@@ -197,7 +197,7 @@ export default {
 
 .controls button {
   padding: 8px 16px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--dt-line);
   border-radius: 4px;
   background: white;
   cursor: pointer;
@@ -209,7 +209,7 @@ export default {
 }
 
 .controls button:hover:not(:disabled) {
-  background: #f0f0f0;
+  background: var(--dt-surface);
 }
 
 .messages {
@@ -219,14 +219,14 @@ export default {
 .message-list {
   max-height: 200px;
   overflow-y: auto;
-  border: 1px solid #eee;
+  border: 1px solid var(--dt-line);
   border-radius: 4px;
   padding: 10px;
 }
 
 .message {
   padding: 5px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--dt-line);
 }
 
 .message:last-child {
@@ -244,6 +244,6 @@ export default {
 
 .active-connections li {
   padding: 5px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--dt-line);
 }
 </style>

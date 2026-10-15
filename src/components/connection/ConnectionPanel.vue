@@ -299,7 +299,7 @@ onMounted(() => {
 
 .panel-header {
   margin-bottom: 20px;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--dt-line);
   padding-bottom: 10px;
 }
 
@@ -319,11 +319,11 @@ onMounted(() => {
 }
 
 .connection-status.connected {
-  background: rgba(76, 175, 80, 0.1);
+  background: color-mix(in srgb, var(--dt-ok) 10%, transparent);
 }
 
 .connection-status.error {
-  background: rgba(244, 67, 54, 0.1);
+  background: color-mix(in srgb, var(--dt-error) 10%, transparent);
 }
 
 .status-indicator {
@@ -382,7 +382,7 @@ label {
   flex: 1;
   padding: 10px 12px;
   background: var(--color-surface-variant);
-  border: 1px solid #ddd;
+  border: 1px solid var(--dt-line);
   border-radius: 4px;
   font-family: 'Courier New', monospace;
   font-size: 16px;
@@ -406,13 +406,13 @@ label {
 }
 
 .copy-button:hover {
-  background: #1976d2;
+  background: var(--dt-accent);
 }
 
 .token-help {
   margin: 0;
   font-size: 12px;
-  color: #666;
+  color: var(--dt-text-faint);
   font-style: italic;
 }
 
@@ -425,7 +425,7 @@ label {
 .token-input {
   flex: 1;
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--dt-line);
   border-radius: 4px;
   font-size: 16px;
   font-family: 'Courier New', monospace;
@@ -435,13 +435,13 @@ label {
 
 .token-input:focus {
   outline: none;
-  border-color: #2196f3;
+  border-color: var(--dt-accent);
   box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
 }
 
 .token-input:disabled {
   background: var(--color-surface-variant);
-  color: #999;
+  color: var(--dt-text-dim);
   cursor: not-allowed;
 }
 
@@ -467,12 +467,12 @@ label {
 }
 
 .connect-button:hover:not(:disabled) {
-  background: #388e3c;
+  background: var(--dt-mint-soft);
 }
 
 .connect-button:disabled {
-  background: #c8e6c9;
-  color: #666;
+  background: var(--dt-surface-3);
+  color: var(--dt-text-faint);
   cursor: not-allowed;
 }
 
@@ -483,7 +483,7 @@ label {
 }
 
 .disconnect-button:hover {
-  background: #d32f2f;
+  background: var(--dt-error);
 }
 
 .connect-ws-button {
@@ -494,25 +494,25 @@ label {
 }
 
 .connect-ws-button:hover:not(:disabled) {
-  background: #1976d2;
+  background: var(--dt-accent);
 }
 
 .connect-ws-button:disabled {
-  background: #bbdefb;
-  color: #666;
+  background: var(--dt-accent);
+  color: var(--dt-text-faint);
   cursor: not-allowed;
 }
 
 .connected-info-text {
   margin: 0;
   font-size: 14px;
-  color: #4caf50;
+  color: var(--dt-ok);
 }
 
 .game-controls {
   margin-top: 25px;
   padding-top: 20px;
-  border-top: 1px solid #eaeaea;
+  border-top: 1px solid var(--dt-line);
 }
 
 .role-selection {
@@ -529,7 +529,7 @@ label {
   flex: 1;
   padding: 10px;
   background: var(--color-surface-variant);
-  border: 1px solid #ddd;
+  border: 1px solid var(--dt-line);
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
@@ -537,13 +537,13 @@ label {
 }
 
 .role-button:hover {
-  background: #e8e8e8;
+  background: var(--dt-surface);
 }
 
 .role-button.active {
   background: var(--color-button-primary);
   color: var(--color-text-on-primary);
-  border-color: #2196f3;
+  border-color: var(--dt-accent);
 }
 
 .start-game-section {
@@ -560,22 +560,22 @@ label {
 }
 
 .start-game-button:hover:not(:disabled) {
-  background: #f57c00;
+  background: var(--dt-gold);
 }
 
 .start-game-button:disabled {
-  background: #ffe0b2;
-  color: #999;
+  background: var(--dt-gold);
+  color: var(--dt-text-dim);
   cursor: not-allowed;
 }
 
 .error-message {
   margin-top: 15px;
   padding: 12px;
-  background: rgba(244, 67, 54, 0.1);
-  border: 1px solid #ffcdd2;
+  background: color-mix(in srgb, var(--dt-error) 10%, transparent);
+  border: 1px solid var(--dt-line);
   border-radius: 4px;
-  color: #c62828;
+  color: var(--dt-error);
 }
 
 .error-message p {
@@ -585,14 +585,14 @@ label {
 
 .clear-error-button {
   background: transparent;
-  color: #c62828;
-  border: 1px solid #c62828;
+  color: var(--dt-error);
+  border: 1px solid var(--dt-error);
   padding: 6px 12px;
   font-size: 13px;
 }
 
 .clear-error-button:hover {
-  background: #c62828;
+  background: var(--dt-error);
   color: var(--color-text-on-primary);
 }
 
@@ -601,7 +601,7 @@ label {
   gap: 10px;
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid #eaeaea;
+  border-top: 1px solid var(--dt-line);
 }
 
 .connection-actions .disconnect-button {
@@ -610,23 +610,23 @@ label {
 
 .reset-button {
   flex: 1;
-  background: #9e9e9e;
+  background: var(--dt-surface-3);
   color: var(--color-text-on-primary);
 }
 
 .reset-button:hover {
-  background: #757575;
+  background: var(--dt-surface-3);
 }
 
 .debug-info {
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px dashed #ddd;
+  border-top: 1px dashed var(--dt-line);
 }
 
 .debug-info summary {
   cursor: pointer;
-  color: #666;
+  color: var(--dt-text-faint);
   font-size: 13px;
   font-weight: 500;
   padding: 5px 0;
