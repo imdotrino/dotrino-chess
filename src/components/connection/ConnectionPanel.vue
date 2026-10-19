@@ -93,7 +93,7 @@
     </div>
     
     <div v-else class="disconnected-info">
-      <p>Conéctate al servidor WebSocket para comenzar.</p>
+      <p>Conéctate para comenzar a jugar.</p>
       <button
         @click="connect"
         :disabled="isConnecting"

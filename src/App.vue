@@ -197,7 +197,7 @@ const gameTitle = computed(() => {
       }
       return 'Ajedrez - Configurando asientos'
     default:
-      return 'Ajedrez con WebSocket'
+      return 'Ajedrez online para dos'
   }
 })
 
