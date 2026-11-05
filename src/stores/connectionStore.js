@@ -7,8 +7,8 @@ import { lobbyController as c } from './lobbyController'
 
 export const useConnectionStore = defineStore('connection', () => {
   // Legacy del panel manual por tokens (ConnectionPanel): se conservan como stubs.
-  const opponentToken = ref(null)
-  const setOpponentToken = (t) => { opponentToken.value = t }
+  const opponentToken = ref(/** @type {string | null} */ (null))
+  const setOpponentToken = (/** @type {string | null} */ t) => { opponentToken.value = t }
   const clearError = () => { c.connectionError.value = null }
   const reset = () => { c.disconnect() }
 

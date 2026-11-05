@@ -5,7 +5,7 @@
  *
  * Endorsements signed by strangers (not in trustMap) are ignored.
  *
- * @param {Object} peer Peer record from the vault
+ * @param {{ myRating?: { rating?: number } | null, endorsements?: Array<{ rating?: number, ratedBy?: string } | null> } | null | undefined} peer Peer record from the vault
  * @param {Map<string, number>} trustMap Map<pubkey, my rating 0-5>
  * @returns {{value: number|null, source: 'mine'|'derived'|null, count: number}}
  */
@@ -21,7 +21,7 @@ export function computeDerivedRating (peer, trustMap) {
   let count = 0
   for (const e of list) {
     if (!e || typeof e.rating !== 'number') continue
-    const trust = trustMap.get(e.ratedBy)
+    const trust = e.ratedBy === undefined ? undefined : trustMap.get(e.ratedBy)
     if (typeof trust !== 'number' || trust <= 0) continue
     const weight = trust / 5
     weightedSum += e.rating * weight

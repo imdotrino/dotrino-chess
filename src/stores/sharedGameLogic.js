@@ -81,15 +81,9 @@ export const SEAT_COLORS = {
   BLACK: 'black'
 }
 
-// Estructura de datos para un movimiento
-/**
- * @typedef {Object} MoveData
- * @property {Object} from - Posición de origen {row: number, col: number}
- * @property {Object} to - Posición de destino {row: number, col: number}
- * @property {string} piece - Pieza que se mueve (ej. 'P', 'r', 'Q', etc.)
- * @property {number} timestamp - Timestamp del movimiento
- * @property {string} [playerToken] - Token del jugador que hizo el movimiento
- */
+/** @typedef {import('../types.js').Board} Board */
+/** @typedef {import('../types.js').Square} Square */
+/** @typedef {import('../types.js').MoveRecord} MoveRecord */
 
 // Estructura de datos para estado del juego
 /**
@@ -97,7 +91,7 @@ export const SEAT_COLORS = {
  * @property {string[][]} board - Tablero 8x8
  * @property {string} currentTurn - 'white' o 'black'
  * @property {string} gameStatus - Estado del juego (ver GAME_STATUS)
- * @property {MoveData[]} moveHistory - Historial de movimientos
+ * @property {MoveRecord[]} moveHistory - Historial de movimientos
  * @property {Object} seats - Estado de los asientos
  * @property {string[]} spectators - Lista de tokens de espectadores
  * @property {Object} timers - Estado de los cronómetros en ms
@@ -119,6 +113,14 @@ export const SEAT_COLORS = {
 
 // Funciones de utilidad compartidas
 
+/**
+ * Notación algebraica (SAN) de una jugada: desambigua con el tablero de antes y
+ * añade `+`/`#` con el de después.
+ * @param {MoveRecord} moveData
+ * @param {Board | null} [boardBefore]
+ * @param {Board | null} [boardAfter]
+ * @returns {string}
+ */
 export function getAlgebraicNotation(moveData, boardBefore = null, boardAfter = null) {
   const { from, to, piece, captured } = moveData
   const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
@@ -143,6 +145,7 @@ export function getAlgebraicNotation(moveData, boardBefore = null, boardAfter = 
     
     // Disambiguation
     if (boardBefore) {
+      /** @type {Square[]} */
       const samePieces = []
       const pColor = piece === piece.toUpperCase() ? COLORS.WHITE : COLORS.BLACK
       
@@ -227,10 +230,11 @@ export function createInitialSeats() {
 /**
  * Verifica si un movimiento es válido para el jugador actual
  * @param {string[][]} board - Tablero actual
- * @param {Object} from - Posición de origen {row, col}
- * @param {Object} to - Posición de destino {row, col}
+ * @param {Square} from - Posición de origen
+ * @param {Square} to - Posición de destino
  * @param {string} piece - Pieza que se mueve
  * @param {string} playerColor - Color del jugador ('white' o 'black')
+ * @param {MoveRecord[]} [moveHistory]
  * @returns {boolean}
  */
 export function isValidMoveForPlayer(board, from, to, piece, playerColor, moveHistory = []) {
@@ -249,7 +253,7 @@ export function isValidMoveForPlayer(board, from, to, piece, playerColor, moveHi
 /**
  * Formatea un mensaje para WebSocket
  * @param {string} type - Tipo de mensaje (de MESSAGE_TYPES)
- * @param {Object} data - Datos del mensaje
+ * @param {unknown} data - Datos del mensaje
  * @returns {string} Mensaje formateado "TYPE|JSON_DATA"
  */
 export function formatWebSocketMessage(type, data) {
@@ -259,7 +263,7 @@ export function formatWebSocketMessage(type, data) {
 /**
  * Parsea un mensaje de WebSocket
  * @param {string} message - Mensaje en formato "TYPE|JSON_DATA"
- * @returns {Object} {type: string, data: Object}
+ * @returns {{ type: string, data: any }}
  */
 export function parseWebSocketMessage(message) {
   const [type, jsonData] = message.split('|')
@@ -286,4 +290,4 @@ export function createInitialGameState() {
     spectators: [],
     timers: { white: 0, black: 0, lastUpdate: Date.now() }
   }
-}
+}

@@ -5,6 +5,12 @@
 // Mayúsculas = blancas, Minúsculas = negras
 // R/r: Torre, N/n: Caballo, B/b: Alfil, Q/q: Reina, K/k: Rey, P/p: Peón
 
+/** @typedef {import('../types.js').Piece} Piece */
+/** @typedef {import('../types.js').Board} Board */
+/** @typedef {import('../types.js').Square} Square */
+/** @typedef {import('../types.js').TargetSquare} TargetSquare */
+/** @typedef {import('../types.js').MoveRecord} MoveRecord */
+
 export const PIECE_TYPES = {
   KING: 'k',
   QUEEN: 'q',
@@ -20,35 +26,63 @@ export const COLORS = {
 }
 
 // Convertir pieza a color
+/**
+ * @param {Piece | null | undefined} piece
+ * @returns {string | null} 'white' | 'black', o null si no hay pieza
+ */
 export function getPieceColor(piece) {
   if (!piece) return null
   return piece === piece.toUpperCase() ? COLORS.WHITE : COLORS.BLACK
 }
 
 // Convertir pieza a tipo
+/**
+ * @param {Piece | null | undefined} piece
+ * @returns {string | null} la letra en minúscula, o null si no hay pieza
+ */
 export function getPieceType(piece) {
   if (!piece) return null
   return piece.toLowerCase()
 }
 
 // Verificar si una pieza es del color especificado
+/**
+ * @param {Piece | null | undefined} piece
+ * @param {string} color
+ * @returns {boolean}
+ */
 export function isPieceColor(piece, color) {
   if (!piece) return false
   return getPieceColor(piece) === color
 }
 
 // Verifica si una pieza se ha movido alguna vez desde su origen
+/**
+ * @param {MoveRecord[] | null | undefined} moveHistory
+ * @param {number} row
+ * @param {number} col
+ * @returns {boolean}
+ */
 export function hasPieceMoved(moveHistory, row, col) {
   if (!moveHistory || moveHistory.length === 0) return false
   return moveHistory.some(m => m.from.row === row && m.from.col === col)
 }
 
 // Obtener todos los movimientos totalmente válidos (protegen al rey)
+/**
+ * @param {Board} board
+ * @param {number} row
+ * @param {number} col
+ * @param {Piece} piece
+ * @param {MoveRecord[]} [moveHistory]
+ * @returns {TargetSquare[]}
+ */
 export function getValidMoves(board, row, col, piece, moveHistory = []) {
   if (!piece) return []
   
   const pieceColor = getPieceColor(piece)
   const pseudoLegalMoves = getPseudoLegalMoves(board, row, col, piece, moveHistory)
+  /** @type {TargetSquare[]} */
   const strictLegalMoves = []
   
   for (const move of pseudoLegalMoves) {
@@ -65,6 +99,15 @@ export function getValidMoves(board, row, col, piece, moveHistory = []) {
 }
 
 // Obtener movimientos pseudo-legales (ignora la seguridad del rey)
+/**
+ * @param {Board} board
+ * @param {number} row
+ * @param {number} col
+ * @param {Piece} piece
+ * @param {MoveRecord[]} [moveHistory]
+ * @param {boolean} [checkCastling]
+ * @returns {TargetSquare[]}
+ */
 export function getPseudoLegalMoves(board, row, col, piece, moveHistory = [], checkCastling = true) {
   if (!piece) return []
   
@@ -90,7 +133,16 @@ export function getPseudoLegalMoves(board, row, col, piece, moveHistory = [], ch
 }
 
 // Movimientos del peón
+/**
+ * @param {Board} board
+ * @param {number} row
+ * @param {number} col
+ * @param {string | null} color
+ * @param {MoveRecord[]} [moveHistory]
+ * @returns {TargetSquare[]}
+ */
 function getPawnMoves(board, row, col, color, moveHistory = []) {
+  /** @type {TargetSquare[]} */
   const moves = []
   const direction = color === COLORS.WHITE ? -1 : 1 // Blancas suben, negras bajan
   const startRow = color === COLORS.WHITE ? 6 : 1
@@ -142,7 +194,15 @@ function getPawnMoves(board, row, col, color, moveHistory = []) {
 }
 
 // Movimientos del caballo (en L)
+/**
+ * @param {Board} board
+ * @param {number} row
+ * @param {number} col
+ * @param {string | null} color
+ * @returns {TargetSquare[]}
+ */
 function getKnightMoves(board, row, col, color) {
+  /** @type {TargetSquare[]} */
   const moves = []
   const knightMoves = [
     { dr: -2, dc: -1 }, { dr: -2, dc: 1 },
@@ -167,7 +227,15 @@ function getKnightMoves(board, row, col, color) {
 }
 
 // Movimientos del alfil (diagonales)
+/**
+ * @param {Board} board
+ * @param {number} row
+ * @param {number} col
+ * @param {string | null} color
+ * @returns {TargetSquare[]}
+ */
 function getBishopMoves(board, row, col, color) {
+  /** @type {TargetSquare[]} */
   const moves = []
   const directions = [
     { dr: -1, dc: -1 }, // Arriba-izquierda
@@ -203,7 +271,15 @@ function getBishopMoves(board, row, col, color) {
 }
 
 // Movimientos de la torre (horizontal/vertical)
+/**
+ * @param {Board} board
+ * @param {number} row
+ * @param {number} col
+ * @param {string | null} color
+ * @returns {TargetSquare[]}
+ */
 function getRookMoves(board, row, col, color) {
+  /** @type {TargetSquare[]} */
   const moves = []
   const directions = [
     { dr: -1, dc: 0 }, // Arriba
@@ -237,6 +313,13 @@ function getRookMoves(board, row, col, color) {
 }
 
 // Movimientos de la reina (combinación de alfil y torre)
+/**
+ * @param {Board} board
+ * @param {number} row
+ * @param {number} col
+ * @param {string | null} color
+ * @returns {TargetSquare[]}
+ */
 function getQueenMoves(board, row, col, color) {
   const bishopMoves = getBishopMoves(board, row, col, color)
   const rookMoves = getRookMoves(board, row, col, color)
@@ -244,7 +327,17 @@ function getQueenMoves(board, row, col, color) {
 }
 
 // Movimientos del rey (una casilla en cualquier dirección + enroque)
+/**
+ * @param {Board} board
+ * @param {number} row
+ * @param {number} col
+ * @param {string | null} color
+ * @param {MoveRecord[]} [moveHistory]
+ * @param {boolean} [checkCastling]
+ * @returns {TargetSquare[]}
+ */
 function getKingMoves(board, row, col, color, moveHistory = [], checkCastling = true) {
+  /** @type {TargetSquare[]} */
   const moves = []
   const kingMoves = [
     { dr: -1, dc: -1 }, { dr: -1, dc: 0 }, { dr: -1, dc: 1 },
@@ -303,11 +396,25 @@ function getKingMoves(board, row, col, color, moveHistory = [], checkCastling = 
 }
 
 // Verificar si una posición está dentro del tablero
+/**
+ * @param {number} row
+ * @param {number} col
+ * @returns {boolean}
+ */
 function isValidPosition(row, col) {
   return row >= 0 && row < 8 && col >= 0 && col < 8
 }
 
 // Verificar si un movimiento es válido
+/**
+ * @param {Board} board
+ * @param {number} fromRow
+ * @param {number} fromCol
+ * @param {number} toRow
+ * @param {number} toCol
+ * @param {MoveRecord[]} [moveHistory]
+ * @returns {boolean}
+ */
 export function isValidMove(board, fromRow, fromCol, toRow, toCol, moveHistory = []) {
   const piece = board[fromRow][fromCol]
   if (!piece) return false
@@ -317,6 +424,15 @@ export function isValidMove(board, fromRow, fromCol, toRow, toCol, moveHistory =
 }
 
 // Aplicar un movimiento al tablero
+/**
+ * Devuelve un tablero nuevo con la jugada aplicada (incluye enroque y captura al paso).
+ * @param {Board} board
+ * @param {number} fromRow
+ * @param {number} fromCol
+ * @param {number} toRow
+ * @param {number} toCol
+ * @returns {Board}
+ */
 export function applyMove(board, fromRow, fromCol, toRow, toCol) {
   const newBoard = board.map(row => [...row])
   const piece = newBoard[fromRow][fromCol]
@@ -350,6 +466,11 @@ export function applyMove(board, fromRow, fromCol, toRow, toCol) {
 }
 
 // Verificar si el rey está en jaque
+/**
+ * @param {Board} board
+ * @param {string | null} color
+ * @returns {boolean}
+ */
 export function isKingInCheck(board, color) {
   // Encontrar la posición del rey
   let kingRow = -1
@@ -390,6 +511,12 @@ export function isKingInCheck(board, color) {
 }
 
 // Retorna todos los movimientos legales posibles de un jugador (Para mate/ahogado)
+/**
+ * @param {Board} board
+ * @param {string} color
+ * @param {MoveRecord[]} [moveHistory]
+ * @returns {number}
+ */
 export function getTotalValidMoves(board, color, moveHistory = []) {
   let count = 0
   for (let row = 0; row < 8; row++) {
@@ -404,6 +531,12 @@ export function getTotalValidMoves(board, color, moveHistory = []) {
 }
 
 // Verificar si el rey está en jaque mate
+/**
+ * @param {Board} board
+ * @param {string} color
+ * @param {MoveRecord[]} [moveHistory]
+ * @returns {boolean}
+ */
 export function isCheckmate(board, color, moveHistory = []) {
   // Primero verificar si el rey está en jaque
   if (!isKingInCheck(board, color)) {
@@ -416,6 +549,12 @@ export function isCheckmate(board, color, moveHistory = []) {
 }
 
 // Verificar tablas (stalemate - ahogado)
+/**
+ * @param {Board} board
+ * @param {string} color
+ * @param {MoveRecord[]} [moveHistory]
+ * @returns {boolean}
+ */
 export function isStalemate(board, color, moveHistory = []) {
   // Para que sea ahogado, el rey NO debe estar en jaque
   if (isKingInCheck(board, color)) {
@@ -427,6 +566,7 @@ export function isStalemate(board, color, moveHistory = []) {
 }
 
 // Crear tablero inicial
+/** @returns {Board} */
 export function createInitialBoard() {
   return [
     ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'], // fila 8 (negras)
@@ -441,6 +581,10 @@ export function createInitialBoard() {
 }
 
 // Convertir notación algebraica a coordenadas
+/**
+ * @param {string} algebraic p. ej. 'e4'
+ * @returns {Square | null}
+ */
 export function algebraicToCoordinates(algebraic) {
   if (algebraic.length < 2) return null
   
@@ -462,6 +606,11 @@ export function algebraicToCoordinates(algebraic) {
 }
 
 // Convertir coordenadas a notación algebraica
+/**
+ * @param {number} row
+ * @param {number} col
+ * @returns {string | null}
+ */
 export function coordinatesToAlgebraic(row, col) {
   const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
   const rank = 8 - row

@@ -144,7 +144,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, shallowRef, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import Phaser from 'phaser'
 import { t } from '@/i18n'
 import { useHostGameStore } from '@/stores/hostGameStore'
@@ -160,11 +160,26 @@ const props = defineProps({
 })
 const emit = defineEmits(['share'])
 
+/** @typedef {import('@/types.js').Board} Board */
+/** @typedef {import('@/types.js').TargetSquare} TargetSquare */
+/**
+ * La escena del tablero, con los grupos que la app le cuelga.
+ * @typedef {Phaser.Scene & {
+ *   pieceGroup?: Phaser.GameObjects.Group,
+ *   coordGroup?: Phaser.GameObjects.Group,
+ *   highlightGroup?: Phaser.GameObjects.Group,
+ *   dragEventsAdded?: boolean
+ * }} BoardScene
+ */
+/** Casilla del tablero: recuerda su posición visual. @typedef {Phaser.GameObjects.Image & { visualRow: number, visualCol: number }} SquareImage */
+/** Pieza arrastrable: recuerda su casilla lógica. @typedef {Phaser.GameObjects.Text & { originalRow: number, originalCol: number }} PieceText */
+
 // Refs
-const gameContainer = ref(null)
-const game = ref(null)
+const gameContainer = ref(/** @type {HTMLElement | null} */ (null))
+// shallowRef: el juego de Phaser no se envuelve en un Proxy reactivo.
+const game = shallowRef(/** @type {Phaser.Game | null} */ (null))
 const gameInitialized = ref(false)
-const gameError = ref(null)
+const gameError = ref(/** @type {string | null} */ (null))
 
 // Stores
 const connectionStore = useConnectionStore()
@@ -196,6 +211,7 @@ const isFlipped = computed(() => isSeated.value && mySeatColor.value === 'black'
 
 // Local timer projection setup
 const localTimers = ref({ white: 0, black: 0 })
+/** @type {ReturnType<typeof setInterval> | null} */
 let timerInterval = null
 
 function updateLocalTimers() {
@@ -215,6 +231,7 @@ function updateLocalTimers() {
   }
 }
 
+/** @param {number | null | undefined} ms */
 function formatTime(ms) {
   const totalSeconds = Math.floor((ms || 0) / 1000)
   const minutes = Math.floor(totalSeconds / 60)
@@ -316,11 +333,19 @@ function retryInitialization() {
  * Click en el overlay DOM del tablero (test automation).
  * Pasa la posición lógica al mismo handler que usa Phaser.
  */
+/**
+ * @param {number} row
+ * @param {number} col
+ */
 function onSquareClick(row, col) {
   handleSquareClick(row, col)
 }
 
 // Funciones de interacción con el juego
+/**
+ * @param {number} row
+ * @param {number} col
+ */
 function handleSquareClick(row, col) {
   if (!isSeated.value || (gameStatus.value !== 'playing' && gameStatus.value !== 'check')) {
     return
@@ -375,6 +400,7 @@ function handleSquareClick(row, col) {
   }
 }
 
+/** @param {string} color */
 function occupySeat(color) {
   if (isHost.value) {
     return hostGameStore.occupySeatAsHost(color)
@@ -431,12 +457,14 @@ function initializeGame() {
 
 function preload() {}
 
+/** @this {Phaser.Scene} */
 function create() {
   createSquareTextures.call(this)
   createBoard.call(this)
   updateBoardInPhaser.call(this, board.value)
 }
 
+/** @this {Phaser.Scene} */
 function createSquareTextures() {
   const squareSize = 64 
   
@@ -455,13 +483,17 @@ function createSquareTextures() {
 
 function update() {}
 
+/** @this {Phaser.Scene} */
 function createBoard() {
+  if (!game.value) return
   const margin = 24
-  const boardSize = game.value.config.width - (margin * 2)
+  const width = Number(game.value.config.width)
+  const height = Number(game.value.config.height)
+  const boardSize = width - (margin * 2)
   const squareSize = boardSize / 8
   
   // Fondo negro para las franjas de coordenadas
-  this.add.rectangle(game.value.config.width/2, game.value.config.height/2, game.value.config.width, game.value.config.height, 0x1a1a1a)
+  this.add.rectangle(width/2, height/2, width, height, 0x1a1a1a)
   
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
@@ -471,9 +503,9 @@ function createBoard() {
       const y = margin + visualRow * squareSize + squareSize / 2
       
       const isWhite = (row + col) % 2 === 0
-      const square = this.add.image(x, y, isWhite ? 'white-square' : 'black-square')
+      const square = /** @type {SquareImage} */ (this.add.image(x, y, isWhite ? 'white-square' : 'black-square')
         .setDisplaySize(squareSize, squareSize)
-        .setInteractive()
+        .setInteractive())
       
       square.visualRow = visualRow
       square.visualCol = visualCol
@@ -487,26 +519,31 @@ function createBoard() {
   }
 }
 
+/** @param {Board} newBoard */
 function updateBoardInPhaser(newBoard) {
   if (!game.value || !game.value.scene) return
   
-  const scene = game.value.scene.getScene('default')
+  const scene = /** @type {BoardScene | null} */ (game.value.scene.getScene('default'))
   if (!scene) return
+  const width = Number(game.value.config.width)
+  const height = Number(game.value.config.height)
   
   if (scene.pieceGroup) {
     scene.pieceGroup.clear(true, true)
   } else {
     scene.pieceGroup = scene.add.group()
   }
+  const pieceGroup = scene.pieceGroup
   
   if (scene.coordGroup) {
     scene.coordGroup.clear(true, true)
   } else {
     scene.coordGroup = scene.add.group()
   }
+  const coordGroup = scene.coordGroup
   
   const margin = 24
-  const boardSize = game.value.config.width - (margin * 2)
+  const boardSize = width - (margin * 2)
   const squareSize = boardSize / 8
   
   // Añadir coordenadas algebraicas en las franjas negras externas
@@ -520,11 +557,11 @@ function updateBoardInPhaser(newBoard) {
     
     // Izquierda (col 0) franja
     const tLeft = scene.add.text(margin / 2, centerY, rankText, textStyle).setOrigin(0.5).setDepth(1)
-    scene.coordGroup.add(tLeft)
+    coordGroup.add(tLeft)
     
     // Derecha (col 7) franja
-    const tRight = scene.add.text(game.value.config.width - margin / 2, centerY, rankText, textStyle).setOrigin(0.5).setDepth(1)
-    scene.coordGroup.add(tRight)
+    const tRight = scene.add.text(width - margin / 2, centerY, rankText, textStyle).setOrigin(0.5).setDepth(1)
+    coordGroup.add(tRight)
     
     // Columnas (A-H)
     const col = i
@@ -534,11 +571,11 @@ function updateBoardInPhaser(newBoard) {
     
     // Arriba (visualRow 0) franja
     const tTop = scene.add.text(centerX, margin / 2, fileText, textStyle).setOrigin(0.5).setDepth(1)
-    scene.coordGroup.add(tTop)
+    coordGroup.add(tTop)
     
     // Abajo (visualRow 7) franja
-    const tBottom = scene.add.text(centerX, game.value.config.height - margin / 2, fileText, textStyle).setOrigin(0.5).setDepth(1)
-    scene.coordGroup.add(tBottom)
+    const tBottom = scene.add.text(centerX, height - margin / 2, fileText, textStyle).setOrigin(0.5).setDepth(1)
+    coordGroup.add(tBottom)
   }
   
   for (let row = 0; row < 8; row++) {
@@ -551,7 +588,7 @@ function updateBoardInPhaser(newBoard) {
       const x = margin + visualCol * squareSize + squareSize / 2
       const y = margin + visualRow * squareSize + squareSize / 2
       
-      const pieceText = scene.add.text(x, y, getPieceSymbol(piece), {
+      const pieceText = /** @type {PieceText} */ (scene.add.text(x, y, getPieceSymbol(piece), {
         fontSize: Math.floor(squareSize * 0.6) + 'px',
         fontFamily: 'Arial, sans-serif',
         color: getPieceColor(piece) === 'white' ? '#FFFFFF' : '#000000',
@@ -559,7 +596,7 @@ function updateBoardInPhaser(newBoard) {
         strokeThickness: 2,
         align: 'center'
       })
-      .setOrigin(0.5)
+      .setOrigin(0.5))
       
       // Setup drag and drop for pieces of the player's color
       const pColor = mySeatColor.value
@@ -582,24 +619,24 @@ function updateBoardInPhaser(newBoard) {
         })
       }
       
-      scene.pieceGroup.add(pieceText)
+      pieceGroup.add(pieceText)
     }
   }
   
   // Setup drag event listeners on the scene
   if (!scene.dragEventsAdded) {
-    scene.input.on('dragstart', function (pointer, gameObject) {
+    scene.input.on('dragstart', function (/** @type {Phaser.Input.Pointer} */ pointer, /** @type {Phaser.GameObjects.GameObject} */ gameObject) {
        // Bring the dragged piece to the top
        scene.children.bringToTop(gameObject)
        // Selecting the piece is already handled by pointerdown
     })
     
-    scene.input.on('drag', function (pointer, gameObject, dragX, dragY) {
+    scene.input.on('drag', function (/** @type {Phaser.Input.Pointer} */ pointer, /** @type {PieceText} */ gameObject, /** @type {number} */ dragX, /** @type {number} */ dragY) {
        gameObject.x = dragX
        gameObject.y = dragY
     })
     
-    scene.input.on('dragend', function (pointer, gameObject) {
+    scene.input.on('dragend', function (/** @type {Phaser.Input.Pointer} */ pointer, /** @type {PieceText} */ gameObject) {
        // Calculate target squares based on pointer coordinates
        let targetVisualCol = Math.floor((pointer.x - margin) / squareSize)
        let targetVisualRow = Math.floor((pointer.y - margin) / squareSize)
@@ -639,6 +676,12 @@ function updateBoardInPhaser(newBoard) {
   }
 }
 
+/**
+ * @this {BoardScene}
+ * @param {TargetSquare[]} moves
+ * @param {number} squareSize
+ * @param {number} margin
+ */
 function highlightValidMoves(moves, squareSize, margin) {
    // Add highlight indicators (small circles) for valid moves
    const scene = this
@@ -647,6 +690,7 @@ function highlightValidMoves(moves, squareSize, margin) {
    } else {
       scene.highlightGroup.clear(true, true)
    }
+   const highlightGroup = scene.highlightGroup
    
    // Dibujar el contorno cuadrado de pieza seleccionada
    if (selectedPiece.value) {
@@ -657,7 +701,7 @@ function highlightValidMoves(moves, squareSize, margin) {
       const visualRow = isFlipped.value ? 7 - selectedPiece.value.row : selectedPiece.value.row
       const py = margin + visualRow * squareSize
       g.strokeRect(px, py, squareSize, squareSize)
-      scene.highlightGroup.add(g)
+      highlightGroup.add(g)
    }
    
    if (moves && moves.length > 0) {
@@ -668,7 +712,7 @@ function highlightValidMoves(moves, squareSize, margin) {
          const dotY = margin + targetVisualRow * squareSize + squareSize / 2
          
          const dot = scene.add.circle(dotX, dotY, squareSize * 0.15, 0x000000, 0.3)
-         scene.highlightGroup.add(dot)
+         highlightGroup.add(dot)
       })
    }
 }
@@ -676,9 +720,9 @@ function highlightValidMoves(moves, squareSize, margin) {
 // Watch both selectedPiece and validMoves to draw highlighting without redrawing all pieces
 watch([() => selectedPiece.value, () => validMoves.value], () => {
    if (gameInitialized.value && game.value) {
-      const scene = game.value.scene.getScene('default')
+      const scene = /** @type {BoardScene | null} */ (game.value.scene.getScene('default'))
       const margin = 24
-      const boardSize = game.value.config.width - (margin * 2)
+      const boardSize = Number(game.value.config.width) - (margin * 2)
       const squareSize = boardSize / 8
       if (scene) {
           if (selectedPiece.value) {
@@ -689,7 +733,9 @@ watch([() => selectedPiece.value, () => validMoves.value], () => {
       }
    }
 })
+/** @param {string} piece */
 function getPieceSymbol(piece) {
+  /** @type {Record<string, string>} */
   const pieceMap = {
     'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
     'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
@@ -697,11 +743,13 @@ function getPieceSymbol(piece) {
   return pieceMap[piece] || piece
 }
 
+/** @param {string | null | undefined} piece */
 function getPieceColor(piece) {
   if (!piece) return null
   return piece === piece.toUpperCase() ? 'white' : 'black'
 }
 
+/** @param {string} newStatus */
 function updateGameStatusInPhaser(newStatus) {}
 
 // Lifecycle hooks

@@ -14,12 +14,32 @@
 //   const engine = makeChessEngine({ ...rules, getAlgebraicNotation })
 //   const lobby = await createLobby({ gameId:'chess', seats:['white','black'], engine, ... })
 
-/** ¿La pieza pertenece al color dado? (mayúscula=blanca, minúscula=negra). */
+/** @typedef {import('../types.js').ChessState} ChessState */
+/** @typedef {import('../types.js').ChessAction} ChessAction */
+/** @typedef {import('../types.js').MoveRecord} MoveRecord */
+
+/**
+ * Reglas que se inyectan: las de chessRules.js más la notación algebraica.
+ * @typedef {Pick<typeof import('../utils/chessRules.js'),
+ *   'createInitialBoard' | 'isValidMove' | 'applyMove' | 'isCheckmate' | 'isStalemate' | 'isKingInCheck' | 'COLORS'>
+ *   & { getAlgebraicNotation?: (move: MoveRecord, before: import('../types.js').Board, after: import('../types.js').Board) => string }} ChessRules
+ */
+
+/**
+ * ¿La pieza pertenece al color dado? (mayúscula=blanca, minúscula=negra).
+ * @param {string} piece
+ * @param {string} color
+ * @returns {boolean}
+ */
 function pieceOwnedBy (piece, color) {
   if (!piece) return false
   return color === 'white' ? piece === piece.toUpperCase() : piece === piece.toLowerCase()
 }
 
+/**
+ * @param {ChessRules} rules
+ * @returns {import('@dotrino/lobby').EngineSpec<ChessState, ChessAction> & { initialState: () => ChessState }}
+ */
 export function makeChessEngine (rules) {
   const {
     createInitialBoard, isValidMove, applyMove,
@@ -31,7 +51,7 @@ export function makeChessEngine (rules) {
 
   return {
     // El estado del motor = SÓLO la parte de ajedrez. seats/status/result son del Room.
-    initialState: () => ({
+    initialState: () => /** @type {ChessState} */ ({
       board: createInitialBoard(),
       currentTurn: WHITE,
       moveHistory: [],
@@ -60,7 +80,8 @@ export function makeChessEngine (rules) {
 
       // Cronómetros: acumular el tiempo del que movía (igual que el host actual).
       const timers = { ...state.timers }
-      if (timers.lastUpdate != null) timers[state.currentTurn] += ctx.now - timers.lastUpdate
+      const mover = /** @type {'white' | 'black'} */ (state.currentTurn)
+      if (timers.lastUpdate != null) timers[mover] += ctx.now - timers.lastUpdate
       timers.lastUpdate = ctx.now
 
       const oldBoard = state.board
@@ -81,7 +102,7 @@ export function makeChessEngine (rules) {
     },
 
     // Ajedrez = información perfecta: misma vista para todos los asientos/espectadores.
-    view: (state) => state,
+    view: (/** @type {ChessState} */ state) => state,
 
     // El lobby lo consulta tras cada apply; el resultado va a RoomState.result.
     isOver (state) {

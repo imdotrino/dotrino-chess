@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, watchEffect, onMounted } from 'vue'
+import { ref, shallowRef, computed, watch, watchEffect, onMounted } from 'vue'
 import LobbyView from './components/lobby/LobbyView.vue'
 import PhaserChessGame from './components/chess/PhaserChessGame.vue'
 import UserSettingsModal from './components/identity/UserSettingsModal.vue'
@@ -37,7 +37,7 @@ const onResize = () => { boardSize.value = computeBoardSize() }
 
 // Identity / rating UI
 const settingsOpen = ref(false)
-const ratingTarget = ref(null)
+const ratingTarget = ref(/** @type {import('./types.js').OpponentInfo | null} */ (null))
 
 // Compartir partida: link directo (#table=<token>) + QR + redes, vía el Web
 // Component compartido del ecosistema. El link abre la partida al cargar.
@@ -89,27 +89,28 @@ const openOpponentRating = () => {
 // ── Topbar estándar del ecosistema (<dotrino-topbar>, §5) ──────────
 // La barra (marca + volver + acciones + idioma + perfil + moneda) es del
 // componente compartido; la app solo le pasa los pilares que ya maneja.
-const topbarRef = ref(null)
-const identityInst = ref(null)
-const reputationInst = ref(null)
+const topbarRef = ref(/** @type {import('@dotrino/topbar').DotrinoTopbar | null} */ (null))
+const identityInst = shallowRef(/** @type {import('@dotrino/identity').Identity | null} */ (null))
+const reputationInst = shallowRef(/** @type {import('@dotrino/reputation').VaultReputation | null} */ (null))
 
 // El idioma lo gobierna el toggle del topbar (clave 'dotrino.lang'); acá solo
 // reflejamos su evento en nuestro modelo para traducir el contenido.
-const onLang = (e) => { const l = e?.detail?.lang; if (l === 'es' || l === 'en') setLang(l) }
+const onLang = (/** @type {CustomEvent<{ lang?: string }>} */ e) => { const l = e?.detail?.lang; if (l === 'es' || l === 'en') setLang(l) }
 
 // "Mi perfil": el botón vive en el topbar (§6.1). El ajedrez sigue abriendo su
 // propio <dotrino-profile> porque necesita `indicators="elo:chess"` (el ELO del
 // jugador), que el modal genérico del topbar no muestra: por eso cancelamos su
 // evento (`.prevent`) en vez de dejarle abrir el suyo.
-const myProfilePk = ref(null)
+const myProfilePk = ref(/** @type {string | null} */ (null))
 async function openMyProfile () {
   await connectionStore.refreshIdentity?.()
   const pk = connectionStore.myPubkey
   if (pk) myProfilePk.value = pk
 }
+/** @param {Element | import('vue').ComponentPublicInstance | null} el */
 function bindMyProfile (el) {
   if (!el) return
-  connectionStore.getProfileProvider().then((p) => { if (p) el.provider = p })
+  connectionStore.getProfileProvider().then((p) => { if (p) /** @type {import('@dotrino/profile').DotrinoProfile} */ (el).provider = p })
 }
 useBackLayer(myProfilePk, { onClose: () => { myProfilePk.value = null } })
 // Pilares al topbar (propiedades JS del Web Component): con `identity` el botón
@@ -140,11 +141,11 @@ onMounted(() => {
       connectionStore.setMode('host', isPrivate ? 'private' : 'public')
       return connectionStore.token
     },
-    async joinServer(hostToken) {
+    async joinServer(/** @type {string} */ hostToken) {
       connectionStore.setMode('guest')
       return connectionStore.subscribeToHost(hostToken)
     },
-    occupy(color) {
+    occupy(/** @type {string} */ color) {
       if (connectionStore.isHost) return hostGameStore.occupySeatAsHost(color)
       return playerGameStore.requestSeat(color)
     },
@@ -152,6 +153,12 @@ onMounted(() => {
       if (connectionStore.isHost) return hostGameStore.leaveSeatAsHost()
       return playerGameStore.requestLeaveSeat()
     },
+    /**
+     * @param {number} fromRow
+     * @param {number} fromCol
+     * @param {number} toRow
+     * @param {number} toCol
+     */
     move(fromRow, fromCol, toRow, toCol) {
       if (connectionStore.isHost) {
         hostGameStore.selectPieceAsHost({ row: fromRow, col: fromCol })
@@ -312,7 +319,7 @@ const returnToLobby = async () => {
   }
 }
 
-const joinPublicGame = async (hostToken) => {
+const joinPublicGame = async (/** @type {string} */ hostToken) => {
   try {
     connectionStore.setMode('guest')
     const success = await connectionStore.subscribeToHost(hostToken)
@@ -330,7 +337,7 @@ const joinPublicGame = async (hostToken) => {
 
 // ── Nickname requerido (gate al inicio + por acción) ──────────────
 const nickDraft = ref('')
-const nickInput = ref(null)
+const nickInput = ref(/** @type {HTMLInputElement | null} */ (null))
 const submitNickname = async () => {
   const ok = await connectionStore.submitNick(nickDraft.value)
   if (ok) nickDraft.value = ''
@@ -339,8 +346,8 @@ watch(() => connectionStore.nickModalOpen, (open) => {
   if (open) setTimeout(() => { try { nickInput.value?.focus() } catch (_) {} }, 50)
 })
 
-const statusLabel = (s) => t.value.status[s] || s
-const colorName = (c) => (c === 'white' ? t.value.white : t.value.black)
+const statusLabel = (/** @type {string} */ s) => t.value.status[/** @type {keyof typeof t.value.status} */ (s)] || s
+const colorName = (/** @type {string | null} */ c) => (c === 'white' ? t.value.white : t.value.black)
 
 // Conectar automáticamente al montar el componente. Pedimos el nick recién
 // después de conectar+hidratar identidad (el vault puede traer un nick guardado).

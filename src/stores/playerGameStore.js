@@ -30,5 +30,5 @@ export const usePlayerGameStore = defineStore('playerGame', () => ({
   requestLeaveSeat: c.leaveSeat,
   resetLocalGame: c.resetGame,
   surrender: c.surrender,
-  requestFullState: () => {} // no-op: el lobby sincroniza solo
+  requestFullState: (/** @type {string} */ _hostToken) => {} // no-op: el lobby sincroniza solo
 }))

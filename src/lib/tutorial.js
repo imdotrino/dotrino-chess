@@ -6,8 +6,14 @@
 // lobby y el de compartir se gatea con skipIf hasta que estás en una partida.
 import { createTutorial } from '@dotrino/tutorial'
 
+/** @type {ReturnType<typeof createTutorial> | null} */
 let instance = null
 
+/**
+ * Arranca (una sola vez) el tutorial de la app.
+ * @param {{ lang: () => string, goLobby: () => void, inGame: () => boolean }} ctx
+ * @returns {ReturnType<typeof createTutorial>}
+ */
 export function startAppTutorial (ctx) {
   if (instance) return instance
   const goLobby = () => ctx.goLobby()

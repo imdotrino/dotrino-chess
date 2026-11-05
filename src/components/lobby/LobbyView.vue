@@ -53,7 +53,7 @@
               </span>
               <span class="host-rep">
                 <span v-if="r.hostElo" class="elo-mini">ELO {{ r.hostElo }}</span>
-                <template v-if="(r.hostScore || 0) > 0"> · ★ {{ (r.hostScore * 5).toFixed(1) }} {{ t.reputation }}</template>
+                <template v-if="r.hostScore && r.hostScore > 0"> · ★ {{ (r.hostScore * 5).toFixed(1) }} {{ t.reputation }}</template>
                 <template v-else-if="!r.hostElo">{{ t.newPlayer }}</template>
               </span>
               <span v-if="otherSeated(r)" class="host-seated">vs {{ otherSeated(r) }}</span>
@@ -79,15 +79,18 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useConnectionStore } from '@/stores/connectionStore'
 import { t } from '@/i18n'
 
+/** @typedef {import('@/stores/lobbyController.js').PublicRoom} PublicRoom */
+
 const connectionStore = useConnectionStore()
 
 const isPrivate = ref(false)
 const manualToken = ref('')
 const onlyOpen = ref(false)
 const errorMessage = ref('')
+/** @type {ReturnType<typeof setInterval> | null} */
 let refreshInterval = null
 
-const openSeats = (r) => r.status === 'waiting' && (r.openSeats || 0) > 0
+const openSeats = (/** @type {PublicRoom} */ r) => r.status === 'waiting' && (r.openSeats || 0) > 0
 
 const rooms = computed(() => {
   let list = connectionStore.publicRooms || []
@@ -106,31 +109,31 @@ const openCount = computed(() => (connectionStore.publicRooms || []).filter(open
 // mesas de bots a veces llegan sin él (resúmenes viejos de la flota): caemos al
 // nombre del primer asiento ocupado para que el bot se vea, en vez de quedar
 // como un "host" anónimo. Mismo arreglo que el lobby de Cuarenta.
-const occupiedNames = (r) => (r.seats || []).filter(s => s.status === 'occupied' && s.name).map(s => s.name)
-const hostName = (r) => r.hostName || occupiedNames(r)[0] || ''
+const occupiedNames = (/** @type {PublicRoom} */ r) => (r.seats || []).filter(s => s.status === 'occupied' && s.name).map(s => s.name)
+const hostName = (/** @type {PublicRoom} */ r) => r.hostName || occupiedNames(r)[0] || ''
 // Rivales ya sentados además del anfitrión (p. ej. una mesa de bot vs bot).
-const otherSeated = (r) => occupiedNames(r).filter(n => n !== hostName(r)).join(' · ')
-const hostLabel = (r) => hostName(r) || (r.isContact ? t.value.yourContact : t.value.host)
-const hostInitials = (r) => {
+const otherSeated = (/** @type {PublicRoom} */ r) => occupiedNames(r).filter(n => n !== hostName(r)).join(' · ')
+const hostLabel = (/** @type {PublicRoom} */ r) => hostName(r) || (r.isContact ? t.value.yourContact : t.value.host)
+const hostInitials = (/** @type {PublicRoom} */ r) => {
   const n = hostName(r)
   return n ? n.replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || '♟' : '♟'
 }
-const statusText = (r) => {
+const statusText = (/** @type {PublicRoom} */ r) => {
   if (r.status === 'playing') return t.value.status.playing
   if (r.status === 'paused') return t.value.status.paused
   if (r.status === 'ended') return t.value.status.finished
   const n = r.openSeats || 0
   return n > 0 ? t.value.seatsFree(n) : t.value.full
 }
-const statusClass = (r) => (openSeats(r) ? 'open' : (r.status === 'playing' ? 'playing' : 'busy'))
-const canJoin = (r) => r.status !== 'ended'
+const statusClass = (/** @type {PublicRoom} */ r) => (openSeats(r) ? 'open' : (r.status === 'playing' ? 'playing' : 'busy'))
+const canJoin = (/** @type {PublicRoom} */ r) => r.status !== 'ended'
 
 const createGame = () => connectionStore.requireNick(() => {
   errorMessage.value = ''
   connectionStore.setMode('host', isPrivate.value ? 'private' : 'public')
 })
 // La pubkey del host viene en el resumen de la sala: con ella el saludo ya sale sellado.
-const joinGame = (roomId, hostPubkey = null) => connectionStore.requireNick(async () => {
+const joinGame = (/** @type {string} */ roomId, /** @type {string | null} */ hostPubkey = null) => connectionStore.requireNick(async () => {
   errorMessage.value = ''
   connectionStore.setMode('guest')
   const ok = await connectionStore.subscribeToHost(roomId, hostPubkey)

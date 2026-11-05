@@ -42,18 +42,20 @@ import { t, lang } from '@/i18n'
 import { useConnectionStore } from '@/stores/connectionStore'
 import '@dotrino/profile'
 
+/** @typedef {import('@/types.js').OpponentInfo} OpponentInfo */
+/** @typedef {import('@/types.js').ChessProfileProvider} ChessProfileProvider */
+
 const props = defineProps({
-  /** { token, pubkey, peer, nickname } */
-  info: { type: Object, default: null }
+  info: { type: /** @type {import('vue').PropType<OpponentInfo | null>} */ (Object), default: null }
 })
 const emit = defineEmits(['close'])
 
 const connectionStore = useConnectionStore()
 
 const customNickname = ref('')
-const profileEl = ref(null)
+const profileEl = ref(/** @type {import('@dotrino/profile').DotrinoProfile | null} */ (null))
 
-const displayName = computed(() => props.info?.peer?.nickname || props.info?.nickname || props.info?.token || '')
+const displayName = computed(() => props.info?.peer?.nickname || props.info?.announcedNickname || props.info?.token || '')
 
 const suspicion = computed(() => {
   const stats = props.info?.peer?.queryStats
@@ -68,6 +70,7 @@ const suspicion = computed(() => {
 // El rate pasa por connectionStore.ratePeer (mantiene su bookkeeping: contacto
 // compartido, trustMap, badges) y además publica la atestación firmada al
 // registro. Aplica también el nickname personalizado si cambió.
+/** @type {ChessProfileProvider} */
 const provider = {
   async getMyRating () {
     const peer = props.info?.peer
@@ -80,7 +83,8 @@ const provider = {
   async getEndorsements () {
     const list = (props.info?.peer?.endorsements || [])
       .filter(e => connectionStore.trustMap.has(e.ratedBy))
-      .map(e => ({ ratedBy: e.ratedBy, rating: e.rating, issuedAt: e.issuedAt || e.ts }))
+      // `ts`: registros viejos sin `issuedAt` (no está en la declaración de identity).
+      .map(e => ({ ratedBy: e.ratedBy, rating: e.rating, issuedAt: e.issuedAt || /** @type {{ ts?: number }} */ (e).ts }))
     const vals = list.map(e => e.rating).filter(n => typeof n === 'number')
     return { endorsements: list, derived: vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null }
   },
@@ -111,6 +115,7 @@ const provider = {
 
 const onRated = () => emit('close')
 
+/** @param {import('@dotrino/profile').DotrinoProfile | null} el */
 function bindEl (el) {
   if (!el) return
   el.provider = provider

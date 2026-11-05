@@ -30,7 +30,7 @@ export const useGameStore = defineStore('game', () => ({
   movePiece: c.makeMove,
   makeMove: c.makeMove,
   takeSeat: c.takeSeat,
-  occupySeat: (color) => c.takeSeat(color),
+  occupySeat: (/** @type {string} */ color) => c.takeSeat(color),
   leaveSeat: c.leaveSeat,
   surrender: c.surrender,
   startGame: c.startGame,

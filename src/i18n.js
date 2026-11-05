@@ -35,25 +35,25 @@ const messages = {
     friend: 'amigo',
     newPlayer: 'jugador nuevo',
     reputation: 'reputación',
-    seatsFree: (n) => `${n} lugar${n > 1 ? 'es' : ''} libre${n > 1 ? 's' : ''}`,
+    seatsFree: (/** @type {number} */ n) => `${n} lugar${n > 1 ? 'es' : ''} libre${n > 1 ? 's' : ''}`,
     full: 'Completa',
     errJoin: 'No se pudo unir a la mesa.',
     errCode: 'Código de mesa inválido.',
     // game
     white: 'Blancas',
     black: 'Negras',
-    toMove: (c) => `Mueven ${c}`,
+    toMove: (/** @type {string} */ c) => `Mueven ${c}`,
     yourTurn: '· tu turno',
-    win: (c) => `Ganan las ${c} 🏆`,
+    win: (/** @type {string} */ c) => `Ganan las ${c} 🏆`,
     moves: 'Movimientos',
     noMoves: 'Sin movimientos aún',
     // tablero / asientos (PhaserChessGame)
     player: 'Jugador',
     leaveSeat: 'Dejar asiento',
-    emptySeat: (c) => `Asiento vacío (${c})`,
-    takeSeat: (c) => `Ocupar ${c}`,
+    emptySeat: (/** @type {string} */ c) => `Asiento vacío (${c})`,
+    takeSeat: (/** @type {string} */ c) => `Ocupar ${c}`,
     checkmateTitle: '¡Jaque mate!',
-    winner: (c) => `Ganan las ${c}`,
+    winner: (/** @type {string} */ c) => `Ganan las ${c}`,
     drawTitle: 'Tablas',
     stalemateReason: 'Por ahogado',
     initializing: 'Inicializando juego…',
@@ -93,7 +93,7 @@ const messages = {
     waitingVerify: 'Esperando verificación de identidad…',
     customNick: 'Nickname personalizado',
     customNickPh: 'Sobrescribe el nickname público',
-    suspicion: (made, known) => `⚠ Te han consultado ${made} personas; conocías ${known}.`,
+    suspicion: (/** @type {number} */ made, /** @type {number} */ known) => `⚠ Te han consultado ${made} personas; conocías ${known}.`,
     status: {
       waiting: 'Esperando jugadores', playing: 'En juego', check: '¡Jaque!',
       checkmate: 'Jaque mate', stalemate: 'Tablas (ahogado)', paused: 'En pausa', finished: 'Partida terminada'
@@ -128,24 +128,24 @@ const messages = {
     friend: 'friend',
     newPlayer: 'new player',
     reputation: 'reputation',
-    seatsFree: (n) => `${n} open seat${n > 1 ? 's' : ''}`,
+    seatsFree: (/** @type {number} */ n) => `${n} open seat${n > 1 ? 's' : ''}`,
     full: 'Full',
     errJoin: "Couldn't join the table.",
     errCode: 'Invalid table code.',
     white: 'White',
     black: 'Black',
-    toMove: (c) => `${c} to move`,
+    toMove: (/** @type {string} */ c) => `${c} to move`,
     yourTurn: '· your turn',
-    win: (c) => `${c} win 🏆`,
+    win: (/** @type {string} */ c) => `${c} win 🏆`,
     moves: 'Moves',
     noMoves: 'No moves yet',
     // board / seats (PhaserChessGame)
     player: 'Player',
     leaveSeat: 'Leave seat',
-    emptySeat: (c) => `Empty seat (${c})`,
-    takeSeat: (c) => `Take ${c}`,
+    emptySeat: (/** @type {string} */ c) => `Empty seat (${c})`,
+    takeSeat: (/** @type {string} */ c) => `Take ${c}`,
     checkmateTitle: 'Checkmate!',
-    winner: (c) => `${c} win`,
+    winner: (/** @type {string} */ c) => `${c} win`,
     drawTitle: 'Draw',
     stalemateReason: 'By stalemate',
     initializing: 'Initializing game…',
@@ -185,7 +185,7 @@ const messages = {
     waitingVerify: 'Waiting for identity verification…',
     customNick: 'Custom nickname',
     customNickPh: 'Overrides the public nickname',
-    suspicion: (made, known) => `⚠ ${made} people have looked you up; you knew ${known}.`,
+    suspicion: (/** @type {number} */ made, /** @type {number} */ known) => `⚠ ${made} people have looked you up; you knew ${known}.`,
     status: {
       waiting: 'Waiting for players', playing: 'Playing', check: 'Check!',
       checkmate: 'Checkmate', stalemate: 'Stalemate', paused: 'Paused', finished: 'Game over'
@@ -197,6 +197,7 @@ const messages = {
 // (§5/§9). Aquí solo reflejamos su valor para traducir el contenido de la app.
 const LANG_KEY = 'dotrino.lang'
 
+/** @returns {'es' | 'en'} */
 function detect () {
   if (typeof localStorage === 'undefined') return 'es'
   // Migración única: el ajedrez guardaba su idioma en 'chess_lang'. Pasamos el
@@ -211,13 +212,16 @@ function detect () {
   let saved = ''
   try { saved = localStorage.getItem(LANG_KEY) || '' } catch (_) {}
   if (saved === 'es' || saved === 'en') return saved
-  const nav = (typeof navigator !== 'undefined' && (navigator.language || '')).toLowerCase()
+  const nav = (typeof navigator !== 'undefined' ? (navigator.language || '') : '').toLowerCase()
   return nav.startsWith('es') ? 'es' : 'en'
 }
 
 export const lang = ref(detect())
 export const t = computed(() => messages[lang.value] || messages.es)
-/** Refleja el idioma que fija el topbar (él persiste en LANG_KEY). */
+/**
+ * Refleja el idioma que fija el topbar (él persiste en LANG_KEY).
+ * @param {string} l
+ */
 export function setLang (l) {
   lang.value = (l === 'en') ? 'en' : 'es'
   try { localStorage.setItem(LANG_KEY, lang.value) } catch (_) {}
